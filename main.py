@@ -1,74 +1,49 @@
 import flet as ft
+import requests
+
+# Адрес вашего бота
+BOT_URL = "https://t.me/CookiesClickerGameBot/getUserData"
+
+async def main(page: ft.Page) -> None:
+    page.bgcolor = "#000000"
+    page.vertical_alignment = ft.MainAxisAlignment.CENTER
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.fonts = {"appetite-italic": "https://raw.githubusercontent.com/google/fonts/master/ofl/kanit/Kanit-Bold.ttf"}
+
+    page.theme = ft.Theme(font_family="appetite-italic")
+
+    user_id = "<user_id_from_bot>"
+
+    # Отправляем запрос на получение данных пользователя
+    response = requests.get(BOT_URL, params={"user_id": user_id})
+    if response.status_code == 200:
+        data = response.json()
+        score = data.get("score")
+        energy = data.get("energy")
+        # Создаем текстовые элементы с полученными данными
+        score_text = ft.Text(value=f"Score: {score}")
+        energy_text = ft.Text(value=f"Energy: {energy}")
+
+        container = ft.Container(
+            content=ft.Column(controls=[score_text, energy_text], alignment=ft.MainAxisAlignment.CENTER),
+            bgcolor=ft.colors.WHITE,
+            border_radius=10
+        )
+
+        stack = ft.Stack(controls=[container])
+
+        page.add(stack)
+        await page.update()
+    else:
+        print("Failed to fetch user data")
+
+if __name__ == "__main__":
+    ft.app(target=main, view=ft.WEB_BROWSER)
 
 
-token = ''
-async def read_data():
-    headers = {
-        "Authorization": f"token {token}"
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.get(GIST_URL, headers=headers)
-        if response.status_code == 200:
-            gist_content = response.json()
-            file_content = next(iter(gist_content['files'].values()))['content']
-            try:
-                return json.loads(file_content)
-            except json.JSONDecodeError:
-                print("Failed to decode JSON:", file_content)
-                return {}
-        else:
-            print(f"Failed to fetch data: {response.status_code} {response.text}")
-            return {}
 
 
-async def write_data(data):
-    headers = {
-        "Authorization": f"token {token}"
-    }
-    data_str = json.dumps(data, indent=2)
-    files = {
-        "data.txt": {
-            "content": data_str
-        }
-    }
-    payload = {
-        "files": files
-    }
-    async with httpx.AsyncClient() as client:
-        response = await client.patch(GIST_URL, headers=headers, json=payload)
-        return response.status_code == 200
 
-
-async def main(page: ft.Page):
-    page.title = "Flet App with Gist DB"
-
-    user_id = str(uuid.uuid4())  # Используем uuid для генерации уникального идентификатора
-    user_data = await read_data()
-
-    name_input = ft.TextField(label="Enter your name", autofocus=True)
-
-    async def enter_click(event):
-        name = name_input.value
-        user_data[user_id] = {"name": name}
-        success = await write_data(user_data)
-        if success:
-            update_ui(name)
-        else:
-            page.add(ft.Text("Error writing data!"))
-            page.update()
-
-    def update_ui(name=""):
-        page.controls.clear()
-        if name:
-            greeting = ft.Text(f"Welcome back, {name}!")
-            page.add(greeting)
-        else:
-            enter_button = ft.TextButton(text="Enter", on_click=enter_click)
-            page.add(name_input, enter_button)
-        page.update()
-
-    name = user_data.get(user_id, {}).get("name")
-    update_ui(name)
 
 
 if __name__ == "__main__":
