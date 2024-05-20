@@ -4,14 +4,10 @@ import httpx
 import json
 import uuid
 
-GIST_ID = ''
-GITHUB_TOKEN = ''
-GIST_URL = f'https://api.github.com/gists/{GIST_ID}'
-
-
+token = ''
 async def read_data():
     headers = {
-        "Authorization": f"token {GITHUB_TOKEN}"
+        "Authorization": f"token {token}"
     }
     async with httpx.AsyncClient() as client:
         response = await client.get(GIST_URL, headers=headers)
@@ -30,7 +26,7 @@ async def read_data():
 
 async def write_data(data):
     headers = {
-        "Authorization": f"token {GITHUB_TOKEN}"
+        "Authorization": f"token {token}"
     }
     data_str = json.dumps(data, indent=2)
     files = {
